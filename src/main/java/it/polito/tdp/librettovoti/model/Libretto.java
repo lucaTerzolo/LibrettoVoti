@@ -3,6 +3,8 @@ package it.polito.tdp.librettovoti.model;
 import java.util.ArrayList;
 import java.util.List;
 
+import it.polito.tdp.librettovoti.db.LibrettoDAO;
+
 public class Libretto {
 
 	private List<Voto> voti;
@@ -10,9 +12,15 @@ public class Libretto {
 	public Libretto() {
 		voti=new ArrayList<Voto>();
 	}
-	
-	public void add(Voto v) {
-		this.voti.add(v);
+	/**
+	 * Funzione per aggiungere un voto che fa controllo di conflitto e duplicazione
+	 * @param v Voto
+	 * @return true se l'operazione ha avuto successo
+	 */
+	public boolean add(Voto v) {
+		LibrettoDAO dao=new LibrettoDAO();
+		boolean result=dao.createVoto(v);
+		return result;
 	}
 	/**
 	 * Filtra gli esami per il voto
@@ -53,6 +61,33 @@ public class Libretto {
 			return true;
 		else
 			return false;
+	}
+	
+	public List<Voto> getVoti(){
+		LibrettoDAO dao=new LibrettoDAO();
+		return dao.readAllVoto();
+	}
+	
+	public Libretto votiMigliorati() {
+		Libretto nuovo=new Libretto();
+		for(Voto v:this.voti) {
+			int punti=v.getPunti();
+			if(punti>=24)
+				punti+=2;
+			else
+				punti++;
+			if(punti>30)
+				punti=30;
+			
+			nuovo.add(new Voto(v.getNome(),punti));
+		}
+		return nuovo;
+	}
+	
+	public void cancellaVotiMinori(int punti) {
+		for(Voto v:this.voti)
+			if(v.getPunti()<punti)
+				this.voti.remove(v);
 	}
 	
 	@Override
